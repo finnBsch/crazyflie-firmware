@@ -1,5 +1,5 @@
-/*
- *    ||          ____  _ __
+	/*
+	 *    ||          ____  _ __
  * +------+      / __ )(_) /_______________ _____  ___
  * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
@@ -54,7 +54,7 @@ static uint16_t filterMask = 1 << VL53L1_RANGESTATUS_RANGE_VALID;
 
 NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devFront;
 NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devBack;
-NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devUp;
+// NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devUp; // DISABLED: UP sensor
 NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devLeft;
 NO_DMA_CCM_SAFE_ZERO_INIT static VL53L1_Dev_t devRight;
 
@@ -123,8 +123,8 @@ static void mrTask(void *param)
     status = VL53L1_StartMeasurement(&devFront);
     status = VL53L1_StopMeasurement(&devBack);
     status = VL53L1_StartMeasurement(&devBack);
-    status = VL53L1_StopMeasurement(&devUp);
-    status = VL53L1_StartMeasurement(&devUp);
+    // status = VL53L1_StopMeasurement(&devUp); // DISABLED: UP sensor
+    // status = VL53L1_StartMeasurement(&devUp); // DISABLED: UP sensor
     status = VL53L1_StopMeasurement(&devLeft);
     status = VL53L1_StartMeasurement(&devLeft);
     status = VL53L1_StopMeasurement(&devRight);
@@ -138,7 +138,7 @@ static void mrTask(void *param)
         vTaskDelayUntil(&lastWakeTime, M2T(100));
         rangeSet(rangeFront, mrGetMeasurementAndRestart(&devFront) / 1000.0f);
         rangeSet(rangeBack, mrGetMeasurementAndRestart(&devBack) / 1000.0f);
-        rangeSet(rangeUp, mrGetMeasurementAndRestart(&devUp) / 1000.0f);
+        // rangeSet(rangeUp, mrGetMeasurementAndRestart(&devUp) / 1000.0f); // DISABLED: UP sensor
         rangeSet(rangeLeft, mrGetMeasurementAndRestart(&devLeft) / 1000.0f);
         rangeSet(rangeRight, mrGetMeasurementAndRestart(&devRight) / 1000.0f);
     }
@@ -184,7 +184,7 @@ static bool mrTest()
 
     isPassed &= mrInitSensor(&devFront, MR_PIN_FRONT, "front");
     isPassed &= mrInitSensor(&devBack, MR_PIN_BACK, "back");
-    isPassed &= mrInitSensor(&devUp, MR_PIN_UP, "up");
+    // mrInitSensor(&devUp, MR_PIN_UP, "up"); // DISABLED: UP sensor
     isPassed &= mrInitSensor(&devLeft, MR_PIN_LEFT, "left");
     isPassed &= mrInitSensor(&devRight, MR_PIN_RIGHT, "right");
 
