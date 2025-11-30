@@ -73,6 +73,11 @@
  * Supporting and utility functions
  */
 
+
+static const float stdDevInitialF = 0; // initialF is almost true by definition 
+static float procNoiseF = 0; // This could be tuned to some other value, but it seems natural for it to be 0
+static float initialF = 0.0;
+
 #ifdef DEBUG_STATE_CHECK
 static void assertStateNotNaN(const kalmanCoreData_t* this) {
   if ((isnan(this->S[KC_STATE_X])) ||
@@ -133,6 +138,7 @@ void kalmanCoreInit(kalmanCoreData_t *this, const kalmanCoreParams_t *params, co
   this->S[KC_STATE_X] = params->initialX;
   this->S[KC_STATE_Y] = params->initialY;
   this->S[KC_STATE_Z] = params->initialZ;
+  this->S[KC_STATE_F] = initialF;
 //  this->S[KC_STATE_PX] = 0;
 //  this->S[KC_STATE_PY] = 0;
 //  this->S[KC_STATE_PZ] = 0;
@@ -170,6 +176,8 @@ void kalmanCoreInit(kalmanCoreData_t *this, const kalmanCoreParams_t *params, co
   this->P[KC_STATE_D0][KC_STATE_D0] = powf(params->stdDevInitialAttitude_rollpitch, 2);
   this->P[KC_STATE_D1][KC_STATE_D1] = powf(params->stdDevInitialAttitude_rollpitch, 2);
   this->P[KC_STATE_D2][KC_STATE_D2] = powf(params->stdDevInitialAttitude_yaw, 2);
+
+  this->P[KC_STATE_F][KC_STATE_F] = powf(stdDevInitialF, 2);
 
   this->Pm.numRows = KC_STATE_DIM;
   this->Pm.numCols = KC_STATE_DIM;
@@ -356,6 +364,8 @@ static void predictDt(kalmanCoreData_t* this, const kalmanCoreParams_t *params, 
   A[KC_STATE_D0][KC_STATE_D0] = 1;
   A[KC_STATE_D1][KC_STATE_D1] = 1;
   A[KC_STATE_D2][KC_STATE_D2] = 1;
+
+  A[KC_STATE_F][KC_STATE_F] = 1;
 
   // position from body-frame velocity
   A[KC_STATE_X][KC_STATE_PX] = this->R[0][0]*dt;
@@ -565,6 +575,9 @@ static void addProcessNoiseDt(kalmanCoreData_t *this, const kalmanCoreParams_t *
   this->P[KC_STATE_D1][KC_STATE_D1] += powf(params->measNoiseGyro_rollpitch * dt + params->procNoiseAtt, 2);
   this->P[KC_STATE_D2][KC_STATE_D2] += powf(params->measNoiseGyro_yaw * dt + params->procNoiseAtt, 2);
 
+
+  this->P[KC_STATE_F][KC_STATE_F] += powf(procNoiseF, 2);
+
   for (int i=0; i<KC_STATE_DIM; i++) {
     for (int j=i; j<KC_STATE_DIM; j++) {
       float p = 0.5f*this->P[i][j] + 0.5f*this->P[j][i];
@@ -657,6 +670,8 @@ bool kalmanCoreFinalize(kalmanCoreData_t* this)
     A[KC_STATE_PY][KC_STATE_PY] = 1;
     A[KC_STATE_PZ][KC_STATE_PZ] = 1;
 
+    A[KC_STATE_F][KC_STATE_F] = 1;
+    
     A[KC_STATE_D0][KC_STATE_D0] =  1 - d1*d1/2 - d2*d2/2;
     A[KC_STATE_D0][KC_STATE_D1] =  d2 + d0*d1/2;
     A[KC_STATE_D0][KC_STATE_D2] = -d1 + d0*d2/2;

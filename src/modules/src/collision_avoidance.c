@@ -305,12 +305,20 @@ static float workspace[7 * MAX_CELL_ROWS];
 // Latency counter for logging.
 static uint32_t latency = 0;
 
+// Debug logging for z setpoint filtering
+static float zSetpointOriginal = 0.0f;
+static float zSetpointFiltered = 0.0f;
+static float zSetpointDelta = 0.0f;
+
 void collisionAvoidanceUpdateSetpoint(
   setpoint_t *setpoint, sensorData_t const *sensorData, state_t const *state, stabilizerStep_t stabilizerStep)
 {
   if (!collisionAvoidanceEnable) {
     return;
   }
+
+  // Store original z setpoint for logging
+  zSetpointOriginal = setpoint->position.z;
 
   TickType_t const time = xTaskGetTickCount();
   bool doAgeFilter = params.maxPeerLocAgeMillis >= 0;
@@ -338,11 +346,18 @@ void collisionAvoidanceUpdateSetpoint(
 
   collisionAvoidanceUpdateSetpointCore(&params, &collisionState, nOthers, workspace, workspace, setpoint, sensorData, state);
 
+  // Store filtered z setpoint and compute delta for logging
+  zSetpointFiltered = setpoint->position.z;
+  zSetpointDelta = zSetpointFiltered - zSetpointOriginal;
+
   latency = xTaskGetTickCount() - time;
 }
 
 LOG_GROUP_START(colAv)
   LOG_ADD(LOG_UINT32, latency, &latency)
+  LOG_ADD(LOG_FLOAT, zOriginal, &zSetpointOriginal)
+  LOG_ADD(LOG_FLOAT, zFiltered, &zSetpointFiltered)
+  LOG_ADD(LOG_FLOAT, zDelta, &zSetpointDelta)
 LOG_GROUP_STOP(colAv)
 
 

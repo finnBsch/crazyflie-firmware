@@ -333,13 +333,13 @@ static void updateQueuedMeasurements(const uint32_t nowMs, const bool quadIsFlyi
         }
         break;
       case MeasurementTypeTOF:
-        kalmanCoreUpdateWithTof(&coreData, &m.data.tof);
+        kalmanCoreUpdateWithTofUsingF(&coreData, &m.data.tof);
         break;
       case MeasurementTypeAbsoluteHeight:
         kalmanCoreUpdateWithAbsoluteHeight(&coreData, &m.data.height);
         break;
       case MeasurementTypeFlow:
-        kalmanCoreUpdateWithFlow(&coreData, &m.data.flow, &gyroLatest);
+        kalmanCoreUpdateWithFlowUsingF(&coreData, &m.data.flow, &gyroLatest);
         break;
       case MeasurementTypeYawError:
         kalmanCoreUpdateWithYawError(&coreData, &m.data.yawError);
@@ -456,6 +456,10 @@ LOG_GROUP_START(kalman)
   * @brief State attitude error yaw
   */
   LOG_ADD(LOG_FLOAT, stateD2, &coreData.S[KC_STATE_D2])
+  /**
+  * @brief Estimated floor height compared to the reference point where Z = 0
+  */  
+  LOG_ADD(LOG_FLOAT, stateF, &coreData.S[KC_STATE_F])
   /**
   * @brief Covariance matrix position x
   */
